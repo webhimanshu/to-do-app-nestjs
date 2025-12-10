@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    container_name: todo_db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo_api
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app 
+      - /usr/src/app/node_modules
+    ports:
+      - '4000:4000'
+    command: ['npm', 'run', 'start:dev']
+
+  adminer:
+    image: adminer
+    container_name: todo_adminer
+    restart: always
+    ports:
+      - '8080:8080'
+    depends_on:
+      - db
+
+volumes:
+  db_data:
