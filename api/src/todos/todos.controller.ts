@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Query,
   Req,
   UseGuards,
@@ -57,7 +57,7 @@ export class TodosController {
     return { success: true, data: result };
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updateTodo(
     @Req() req: AuthRequest,
     @Body() body: updateTodo,
