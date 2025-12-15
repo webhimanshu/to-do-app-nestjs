@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Pagination from "./Pagination";
 
 export enum TodoStatus {
   IN_PROGRESS = "in_progress",
@@ -40,6 +41,11 @@ interface TodoDashboardProps {
   onUpdateSubmit: (e: React.FormEvent) => void;
   onCancelForm: () => void;
   onLogout: () => void;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
 }
 
 const TodoDashboard: React.FC<TodoDashboardProps> = ({
@@ -58,6 +64,11 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
   onUpdateSubmit,
   onCancelForm,
   onLogout,
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -66,8 +77,12 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Todo Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage your tasks efficiently</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Todo Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your tasks efficiently
+              </p>
             </div>
             <button
               onClick={onLogout}
@@ -130,7 +145,9 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
               {filteredTodos.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
                   <p className="text-gray-500 text-lg">No todos found</p>
-                  <p className="text-gray-400 mt-2">Create your first todo to get started!</p>
+                  <p className="text-gray-400 mt-2">
+                    Create your first todo to get started!
+                  </p>
                 </div>
               ) : (
                 filteredTodos.map((todo) => (
@@ -141,7 +158,9 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold text-gray-900">{todo.name}</h3>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {todo.name}
+                          </h3>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               todo.status === TodoStatus.COMPLETED
@@ -149,7 +168,9 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                                 : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
-                            {todo.status === TodoStatus.COMPLETED ? "Completed" : "In Progress"}
+                            {todo.status === TodoStatus.COMPLETED
+                              ? "Completed"
+                              : "In Progress"}
                           </span>
                         </div>
                         <p className="text-gray-600 mb-3">{todo.description}</p>
@@ -172,7 +193,10 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                               {todo.time}
                             </span>
                           )}
-                          <span>Created: {new Date(todo.createdAt).toLocaleDateString()}</span>
+                          <span>
+                            Created:{" "}
+                            {new Date(todo.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
@@ -205,7 +229,11 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                             )
                           }
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
-                          title={todo.status === TodoStatus.COMPLETED ? "Mark In Progress" : "Mark Completed"}
+                          title={
+                            todo.status === TodoStatus.COMPLETED
+                              ? "Mark In Progress"
+                              : "Mark Completed"
+                          }
                         >
                           <svg
                             className="w-5 h-5"
@@ -246,6 +274,15 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                 ))
               )}
             </div>
+
+            {/* Pagination */}
+           <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={onPageChange}
+              />
           </div>
 
           {/* Sidebar - Create/Edit Form */}
@@ -280,7 +317,9 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                     <textarea
                       required
                       value={formData.description}
-                      onChange={(e) => onFormChange({ description: e.target.value })}
+                      onChange={(e) =>
+                        onFormChange({ description: e.target.value })
+                      }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="Todo description"
                       rows={3}
@@ -305,10 +344,14 @@ const TodoDashboard: React.FC<TodoDashboardProps> = ({
                     </label>
                     <select
                       value={formData.status}
-                      onChange={(e) => onFormChange({ status: e.target.value as TodoStatus })}
+                      onChange={(e) =>
+                        onFormChange({ status: e.target.value as TodoStatus })
+                      }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value={TodoStatus.IN_PROGRESS}>In Progress</option>
+                      <option value={TodoStatus.IN_PROGRESS}>
+                        In Progress
+                      </option>
                       <option value={TodoStatus.COMPLETED}>Completed</option>
                     </select>
                   </div>

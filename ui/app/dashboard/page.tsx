@@ -18,10 +18,13 @@ interface UpdateTodoForm {
   time?: string;
   status?: TodoStatus;
 }
+
 export default function DashboardPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const router = useRouter();
   const auth = useAuth();
   const queryClient = useQueryClient();
@@ -32,7 +35,7 @@ export default function DashboardPage() {
     status: TodoStatus.IN_PROGRESS,
   });
 
-  const { data: todos, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["todos"],
     queryFn: () =>
       api
@@ -41,6 +44,20 @@ export default function DashboardPage() {
         })
         .then((resp) => resp.data),
   });
+  console.log("🚀 ~ DashboardPage ~ data:", data)
+
+  const { data: todos, isLoading } = useQuery({
+    queryKey: ["paginatedTodos", currentPage, itemsPerPage],
+    queryFn: () =>
+      api
+        .get("todos/paginated", {
+          headers: { Authorization: `Bearer ${auth.token}` },
+          params: { page: currentPage, limit: itemsPerPage },
+        })
+        .then((resp) => resp.data),
+  });
+
+  const totalPages = Math.ceil(todos?.data?.total / itemsPerPage);
 
   const createTodo = useMutation({
     mutationFn: (payload: TodoFormData) =>
@@ -49,18 +66,18 @@ export default function DashboardPage() {
           headers: { Authorization: `Bearer ${auth.token}` },
         })
         .then((resp) => resp.data),
-        
+
     onSuccess: () => {
       toast.success("Todo Created");
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      queryClient.invalidateQueries({ queryKey: ["paginatedTodos"] });
       setShowCreateForm(false);
-        setEditingTodo(null);
-        setFormData({
-          name: "",
-          description: "",
-          time: "",
-          status: TodoStatus.IN_PROGRESS,
-        });
+      setEditingTodo(null);
+      setFormData({
+        name: "",
+        description: "",
+        time: "",
+        status: TodoStatus.IN_PROGRESS,
+      });
     },
 
     onError: (error) => {
@@ -79,7 +96,7 @@ export default function DashboardPage() {
 
     onSuccess: () => {
       toast.success("Todo updated");
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      queryClient.invalidateQueries({ queryKey: ["paginatedTodos"] });
       setShowCreateForm(false);
       setEditingTodo(null);
       setFormData({
@@ -90,10 +107,10 @@ export default function DashboardPage() {
       });
     },
 
-    onError:(error)=>{
+    onError: (error) => {
       console.log("Error", error);
-      toast.error((error as Error).message)
-    }
+      toast.error((error as Error).message);
+    },
   });
 
   const deleteTodo = useMutation({
@@ -104,7 +121,7 @@ export default function DashboardPage() {
         })
         .then((resp) => resp.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      queryClient.invalidateQueries({ queryKey: ["paginatedTodos"] });
       toast.success("Todo Deleted Successfully");
     },
     onError: (error) => {
@@ -115,19 +132,17 @@ export default function DashboardPage() {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createTodo.mutate(formData)
+    createTodo.mutate(formData);
   };
 
   const handleUpdateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire to update mutation
-    if(editingTodo){
-      updateTodo.mutate({ id: editingTodo.id, payload: formData })
+    if (editingTodo) {
+      updateTodo.mutate({ id: editingTodo.id, payload: formData });
     }
   };
 
   const handleDelete = (id: string) => {
-    // TODO: wire to delete mutation
     deleteTodo.mutate({ id });
   };
 
@@ -143,16 +158,13 @@ export default function DashboardPage() {
   };
 
   const handleStatusChange = (id: string, status: string) => {
-    // TODO: wire to status change mutation
-    updateTodo.mutate({id, payload: {status : status as TodoStatus}});
+    updateTodo.mutate({ id, payload: { status: status as TodoStatus } });
   };
-
 
   // const filteredTodos = todos?.data?.filter((todo: TodoFormData) => {
   //   if (filterStatus === "all") return true;
   //   return todo.status === filterStatus;
   // });
-
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -184,7 +196,7 @@ export default function DashboardPage() {
           status: TodoStatus.IN_PROGRESS,
         });
       }}
-      filteredTodos={todos.data}
+      filteredTodos={todos?.data.todos}
       onEdit={handleEdit}
       onStatusChange={handleStatusChange}
       onDelete={handleDelete}
@@ -207,7 +219,11 @@ export default function DashboardPage() {
         });
       }}
       onLogout={handleLogout}
-      // onSubmitForm={() => createTodo.mutate(formData)}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      totalItems={todos?.data?.total}
+      itemsPerPage={itemsPerPage}
+      onPageChange={setCurrentPage}
     />
   );
 }
