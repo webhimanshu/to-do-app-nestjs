@@ -161,10 +161,10 @@ export default function DashboardPage() {
     updateTodo.mutate({ id, payload: { status: status as TodoStatus } });
   };
 
-  // const filteredTodos = todos?.data?.filter((todo: TodoFormData) => {
-  //   if (filterStatus === "all") return true;
-  //   return todo.status === filterStatus;
-  // });
+  const filteredTodos = todos?.data.todos.filter((todo: TodoFormData) => {
+    if (filterStatus === "all") return true;
+    return todo.status === filterStatus;
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -196,7 +196,7 @@ export default function DashboardPage() {
           status: TodoStatus.IN_PROGRESS,
         });
       }}
-      filteredTodos={todos?.data.todos}
+      filteredTodos={filteredTodos}
       onEdit={handleEdit}
       onStatusChange={handleStatusChange}
       onDelete={handleDelete}

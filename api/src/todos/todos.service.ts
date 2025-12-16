@@ -169,7 +169,7 @@ export class TodosService {
       where: { user: { id: userId } },
       skip: offset,
       take,
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
     });
     return {
       todos,
